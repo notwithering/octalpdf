@@ -40,8 +40,6 @@ if [[ -z "$total_pages" ]]; then
     total_pages=$(pdftk "$input_pdf" dump_data | grep NumberOfPages | awk '{print $2}')
 fi
 
-echo "$total_pages"
-
 if [[ -z "$total_pages" ]]; then
     echo "unable to determine the total number of pages"
     exit 1
