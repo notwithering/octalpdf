@@ -1,7 +1,7 @@
 #!/bin/bash
 
 usage() {
-    echo "usage: $0 <input_pdf> [options...] <output_pdf>"
+    echo "usage: octalpdf <input_pdf> [options...] <output_pdf>"
     echo "  -p <pages>           total number of pages (if omitted will be auto-detected)"
     echo "  -h                   show this help message"
     exit 0
