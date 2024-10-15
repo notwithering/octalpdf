@@ -64,7 +64,7 @@ cleanup() {
 trap cleanup EXIT
 
 blank_pdf=$(mktemp -p "$tmp_dir" XXXXXXXXXX.pdf)
-gs -o "$blank_pdf" -sDEVICE=pdfwrite -g6120x7920 -c "showpage"
+gs -q -o "$blank_pdf" -sDEVICE=pdfwrite -g6120x7920 -c "showpage"
 
 pages=()
 for ((i=1; i<=total_pages; i+=8)); do
@@ -82,4 +82,4 @@ done
 formatted=$(mktemp -p "$tmp_dir" XXXXXXXXXX.pdf)
 pdftk "$input_pdf" "A=$blank_pdf" cat "${pages[@]}" output "$formatted"
 
-pdfjam --nup 2x2 "$formatted" --outfile "$output_pdf"
+pdfjam -q --nup 2x2 "$formatted" --outfile "$output_pdf"
