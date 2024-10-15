@@ -52,25 +52,21 @@ cleanup() {
 trap cleanup EXIT
 
 for ((i=1; i<=total_pages; i+=8)); do
-    p1=$((i))
-    p2=$((i+1))
-    p3=$((i+2))
-    p4=$((i+3))
-    p5=$((i+4))
-    p6=$((i+5))
-    p7=$((i+6))
-    p8=$((i+7))
+    offsets=("1" "6" "2" "5" "7" "0" "4" "3")
+	pages=()
 
-    [[ $p1 -gt $total_pages ]] && p1=""
-    [[ $p2 -gt $total_pages ]] && p2="" 
-    [[ $p3 -gt $total_pages ]] && p3="" || p3="$p3"south
-    [[ $p4 -gt $total_pages ]] && p4="" || p4="$p4"south
-    [[ $p5 -gt $total_pages ]] && p5="" || p5="$p5"south
-    [[ $p6 -gt $total_pages ]] && p6="" || p6="$p6"south
-    [[ $p7 -gt $total_pages ]] && p7=""
-    [[ $p8 -gt $total_pages ]] && p8=""
+	for idx in ${!offsets[@]}; do
+		offset=${offsets[idx]}
+		page=$((i + $offset))
+		if [[ "$page" -le "$total_pages" ]]; then
+			pages[$idx]=$page
+			if [[ "$offset" -ge 3 && "$offset" -le 6 ]]; then
+				pages[$idx]+="south"
+			fi
+		fi
+	done
 
-    pdftk "$input_pdf" cat $p2 $p7 $p3 $p6 $p8 $p1 $p5 $p4 output "$tmp_dir/$i.pdf"
+    pdftk "$input_pdf" cat "${pages[@]}" output "$tmp_dir/$i.pdf"
 done
 
 input_files=""
@@ -79,6 +75,7 @@ for ((i=1; i<=total_pages; i+=8)); do
 done
 
 formatted=$(mktemp -p $tmp_dir XXXXXXXXXX.pdf)
+echo pdftk $input_files cat output $formatted
 pdftk $input_files cat output $formatted
-
+echo pdfjam --nup 2x2 $formatted --outfile $output_pdf
 pdfjam --nup 2x2 $formatted --outfile $output_pdf
