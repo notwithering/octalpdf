@@ -11,7 +11,6 @@ total_pages=""
 input_pdf=""
 output_pdf=""
 
-# First, scan for options
 while getopts ":p:h" opt; do
   case $opt in
     p)
@@ -66,6 +65,7 @@ trap cleanup EXIT
 
 pages=()
 for ((i=1; i<=total_pages; i+=8)); do
+	# FIXME: dryer than the sahara desert
     [[ $((i + 1)) -le $total_pages ]] && pages+=($((i + 1)))
     [[ $((i + 6)) -le $total_pages ]] && pages+=($((i + 6)))
     [[ $((i + 2)) -le $total_pages ]] && pages+=($((i + 2))south)
