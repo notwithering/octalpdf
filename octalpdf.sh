@@ -1,14 +1,17 @@
 #!/bin/bash
 
 usage() {
-    echo "usage: octalpdf <input_pdf> [options...] <output_pdf>"
-    echo "  -p <pages>           total number of pages (if omitted will be auto-detected)"
+    echo "usage: octalpdf [options...] <input_pdf> <output_pdf>"
+    echo "  -p <pages>           total number of pages (if omitted, it will be auto-detected)"
     echo "  -h                   show this help message"
     exit 0
 }
 
 total_pages=""
+input_pdf=""
+output_pdf=""
 
+# First, scan for options
 while getopts ":p:h" opt; do
   case $opt in
     p)
@@ -19,21 +22,31 @@ while getopts ":p:h" opt; do
       ;;
     \?)
       echo "invalid option -$OPTARG" >&2
+      exit 1
       ;;
     :)
       echo "option -$OPTARG requires an argument" >&2
+      exit 1
       ;;
   esac
 done
 
-shift $((OPTIND-1))
+shift $((OPTIND - 1))
 
-input_pdf="$1"
-output_pdf="$2"
+for arg in "$@"; do
+  if [[ -z "$input_pdf" ]]; then
+    input_pdf="$arg"
+  elif [[ -z "$output_pdf" ]]; then
+    output_pdf="$arg"
+  else
+    echo "too many arguments"
+    exit 1
+  fi
+done
 
 if [[ -z "$input_pdf" || -z "$output_pdf" ]]; then
     echo "input pdf and output pdf are required"
-	exit 1
+    exit 1
 fi
 
 if [[ -z "$total_pages" ]]; then
@@ -47,35 +60,23 @@ fi
 
 tmp_dir=$(mktemp -p /tmp -d octalpdf.XXXXXXXXXX)
 cleanup() {
-	rm -rf $tmp_dir
+    rm -rf "$tmp_dir"
 }
 trap cleanup EXIT
 
+pages=()
 for ((i=1; i<=total_pages; i+=8)); do
-    offsets=("1" "6" "2" "5" "7" "0" "4" "3")
-	pages=()
-
-	for idx in ${!offsets[@]}; do
-		offset=${offsets[idx]}
-		page=$((i + $offset))
-		if [[ "$page" -le "$total_pages" ]]; then
-			pages[$idx]=$page
-			if [[ "$offset" -ge 3 && "$offset" -le 6 ]]; then
-				pages[$idx]+="south"
-			fi
-		fi
-	done
-
-    pdftk "$input_pdf" cat "${pages[@]}" output "$tmp_dir/$i.pdf"
+    [[ $((i + 1)) -le $total_pages ]] && pages+=($((i + 1)))
+    [[ $((i + 6)) -le $total_pages ]] && pages+=($((i + 6)))
+    [[ $((i + 2)) -le $total_pages ]] && pages+=($((i + 2))south)
+    [[ $((i + 5)) -le $total_pages ]] && pages+=($((i + 5))south)
+    [[ $((i + 7)) -le $total_pages ]] && pages+=($((i + 7)))
+    [[ $((i + 0)) -le $total_pages ]] && pages+=($((i + 0)))
+    [[ $((i + 4)) -le $total_pages ]] && pages+=($((i + 4))south)
+    [[ $((i + 3)) -le $total_pages ]] && pages+=($((i + 3))south)
 done
 
-input_files=""
-for ((i=1; i<=total_pages; i+=8)); do
-    input_files+="$tmp_dir/$i.pdf "
-done
+formatted=$(mktemp -p "$tmp_dir" XXXXXXXXXX.pdf)
+pdftk "$input_pdf" cat "${pages[@]}" output "$formatted"
 
-formatted=$(mktemp -p $tmp_dir XXXXXXXXXX.pdf)
-echo pdftk $input_files cat output $formatted
-pdftk $input_files cat output $formatted
-echo pdfjam --nup 2x2 $formatted --outfile $output_pdf
-pdfjam --nup 2x2 $formatted --outfile $output_pdf
+pdfjam --nup 2x2 "$formatted" --outfile "$output_pdf"
