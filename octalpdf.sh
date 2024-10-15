@@ -63,20 +63,23 @@ cleanup() {
 }
 trap cleanup EXIT
 
+blank_pdf=$(mktemp -p "$tmp_dir" XXXXXXXXXX.pdf)
+gs -o "$blank_pdf" -sDEVICE=pdfwrite -g6120x7920 -c "showpage"
+
 pages=()
 for ((i=1; i<=total_pages; i+=8)); do
 	# FIXME: dryer than the sahara desert
-    [[ $((i + 1)) -le $total_pages ]] && pages+=($((i + 1)))
-    [[ $((i + 6)) -le $total_pages ]] && pages+=($((i + 6)))
-    [[ $((i + 2)) -le $total_pages ]] && pages+=($((i + 2))south)
-    [[ $((i + 5)) -le $total_pages ]] && pages+=($((i + 5))south)
-    [[ $((i + 7)) -le $total_pages ]] && pages+=($((i + 7)))
-    [[ $((i + 0)) -le $total_pages ]] && pages+=($((i + 0)))
-    [[ $((i + 4)) -le $total_pages ]] && pages+=($((i + 4))south)
-    [[ $((i + 3)) -le $total_pages ]] && pages+=($((i + 3))south)
+    [[ $((i + 1)) -le $total_pages ]] && pages+=($((i + 1))) || pages+=("A1")
+    [[ $((i + 6)) -le $total_pages ]] && pages+=($((i + 6))) || pages+=("A1")
+    [[ $((i + 2)) -le $total_pages ]] && pages+=($((i + 2))south) || pages+=("A1south")
+    [[ $((i + 5)) -le $total_pages ]] && pages+=($((i + 5))south) || pages+=("A1south")
+    [[ $((i + 7)) -le $total_pages ]] && pages+=($((i + 7))) || pages+=("A1")
+    [[ $((i + 0)) -le $total_pages ]] && pages+=($((i + 0))) || pages+=("A1")
+    [[ $((i + 4)) -le $total_pages ]] && pages+=($((i + 4))south) || pages+=("A1south")
+    [[ $((i + 3)) -le $total_pages ]] && pages+=($((i + 3))south) || pages+=("A1south")
 done
 
 formatted=$(mktemp -p "$tmp_dir" XXXXXXXXXX.pdf)
-pdftk "$input_pdf" cat "${pages[@]}" output "$formatted"
+pdftk "$input_pdf" "A=$blank_pdf" cat "${pages[@]}" output "$formatted"
 
 pdfjam --nup 2x2 "$formatted" --outfile "$output_pdf"
