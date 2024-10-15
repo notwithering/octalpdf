@@ -26,3 +26,15 @@ it works by printing each page a certain way so you fold a piece of paper giving
 curl https://raw.githubusercontent.com/notwithering/octalpdf/refs/heads/main/octalpdf.sh > ~/.local/bin/octalpdf
 chmod +x ~/.local/bin/octalpdf
 ```
+
+# prerequisites
+
+- awk
+- ghostscript
+- grep
+- pdfjam (of texlive-core)
+- pdftk
+
+```bash
+pacman --needed -S awk ghostscript grep texlive-core pdftk
+```
